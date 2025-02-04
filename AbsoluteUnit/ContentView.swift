@@ -8,10 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var valueToConvert = "User Input Value"
+    @State private var valueToConvert : String = "0.0"
     @State private var unitToConvertFrom = "Fahrenheit"
     @State private var unitToConvertTo = "ZZZ"
     @State private var conversionUnitType = "Temperature"
+    @FocusState private var isStartingValueFocused: Bool
+    
+    var convertedVal : Double {
+        return 0.0
+    }
     var body: some View {
         NavigationView {
             Form {
@@ -50,9 +55,24 @@ struct ContentView: View {
                 }
                 Section("Starting Value") {
                     TextField("Value to convert", text: $valueToConvert)
+                        .keyboardType(.numberPad)
+                        .focused($isStartingValueFocused, equals: true)
+                        .onChange(of: valueToConvert, initial: false) { oldValue , newValue in
+                            let hasNonNumber = /[^0-9.]/
+                            let decimalCount = newValue.reduce(into: 0) { result, char in
+                                return result += char == "." ? 1 : 0
+                            }
+                            
+                            if newValue.contains(hasNonNumber) || decimalCount > 1{
+                                valueToConvert = oldValue
+                            }
+                            else {
+                                valueToConvert = newValue
+                            }
+                        }
                 }
                 Section("Converted Value") {
-                    Text("Converted Val HERE")
+                    Text("\(convertedVal)")
                 }
             }
         }
