@@ -7,15 +7,55 @@
 
 import SwiftUI
 
+enum TemperatureUnit : String, CaseIterable{
+    case Fahrenheit = "Fahrenheit"
+    case Celsius = "Celsius"
+    case Kelvin = "Kelvin"
+}
+
 struct ContentView: View {
     @State private var valueToConvert : String = "0.0"
-    @State private var unitToConvertFrom = "Fahrenheit"
-    @State private var unitToConvertTo = "ZZZ"
+    @State private var unitToConvertFrom : TemperatureUnit = .Fahrenheit
+    @State private var unitToConvertTo : TemperatureUnit = .Celsius
     @State private var conversionUnitType = "Temperature"
     @FocusState private var isStartingValueFocused: Bool
     
     var convertedVal : Double {
-        return 0.0
+        if let valueToConvert = Double(valueToConvert) {
+            switch unitToConvertFrom {
+            case .Fahrenheit:
+                switch unitToConvertTo {
+                case .Fahrenheit:
+                    return valueToConvert
+                case .Celsius:
+                    return (valueToConvert - 32) * (5/9)
+                case .Kelvin:
+                    return (valueToConvert - 32) * (5/9) + 273.15
+                }
+                
+            case .Celsius:
+                switch unitToConvertTo {
+                case .Fahrenheit:
+                    return valueToConvert * (9/5) + 32
+                case .Celsius:
+                    return valueToConvert
+                case .Kelvin:
+                    return valueToConvert + 273.15
+                }
+                
+            case .Kelvin:
+                switch unitToConvertTo {
+                case .Fahrenheit:
+                    return (valueToConvert - 273.15) * (9/5) + 32
+                case .Celsius:
+                    return valueToConvert - 273.15
+                case .Kelvin:
+                    return valueToConvert
+                }
+            }
+        }else {
+            return 0.0
+        }
     }
     var body: some View {
         NavigationView {
@@ -33,8 +73,8 @@ struct ContentView: View {
                         VStack{
                             Section("From") {
                                 Picker("Select", selection: $unitToConvertFrom){
-                                    ForEach(["Fahrenheit", "Celsius", "Kelvin"], id: \.self) {
-                                        Text($0)
+                                    ForEach(TemperatureUnit.allCases, id: \.self) {
+                                        Text($0.rawValue)
                                     }
                                 }
                                 .pickerStyle(.wheel)
@@ -43,9 +83,9 @@ struct ContentView: View {
                         }
                         VStack{
                             Section("To") {
-                                Picker("Select", selection: $unitToConvertFrom){
-                                    ForEach(["Fahrenheit", "Celsius", "Kelvin"], id: \.self) {
-                                        Text($0)
+                                Picker("Select", selection: $unitToConvertTo){
+                                    ForEach(TemperatureUnit.allCases, id: \.self) {
+                                        Text($0.rawValue)
                                     }
                                 }
                                 .pickerStyle(.wheel)
