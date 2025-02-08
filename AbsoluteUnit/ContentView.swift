@@ -7,63 +7,161 @@
 
 import SwiftUI
 
+enum ConversionTypes : String, CaseIterable {
+    case Temperature = "Temperature"
+    case Length = "Length"
+}
+
 enum TemperatureUnit : String, CaseIterable{
     case Fahrenheit = "Fahrenheit"
     case Celsius = "Celsius"
     case Kelvin = "Kelvin"
 }
 
+//meters, kilometers, feet, yards, or miles
+enum LengthUnit : String, CaseIterable {
+    case Meters = "Meters"
+    case Kilometers = "Kilometers"
+    case Feet = "Feet"
+    case Yards = "Yards"
+    case Miles = "Miles"
+}
+
 struct ContentView: View {
     @State private var valueToConvert : String = "0.0"
-    @State private var unitToConvertFrom : TemperatureUnit = .Fahrenheit
-    @State private var unitToConvertTo : TemperatureUnit = .Celsius
-    @State private var conversionUnitType = "Temperature"
+    @State private var conversionUnitType : ConversionTypes = .Temperature
+    
+    @State private var temperatureUnitToConvertFrom = TemperatureUnit.Fahrenheit
+    @State private var temperatureUnitToConvertTo = TemperatureUnit.Celsius
+    @State private var lengthUnitToConvertFrom = LengthUnit.Meters
+    @State private var lengthUnitToConvertTo = LengthUnit.Kilometers
+    
     @FocusState private var isStartingValueFocused: Bool
     
     var convertedVal : Double {
         if let valueToConvert = Double(valueToConvert) {
-            switch unitToConvertFrom {
-            case .Fahrenheit:
-                switch unitToConvertTo {
-                case .Fahrenheit:
-                    return valueToConvert
-                case .Celsius:
-                    return (valueToConvert - 32) * (5/9)
-                case .Kelvin:
-                    return (valueToConvert - 32) * (5/9) + 273.15
-                }
-                
-            case .Celsius:
-                switch unitToConvertTo {
-                case .Fahrenheit:
-                    return valueToConvert * (9/5) + 32
-                case .Celsius:
-                    return valueToConvert
-                case .Kelvin:
-                    return valueToConvert + 273.15
-                }
-                
-            case .Kelvin:
-                switch unitToConvertTo {
-                case .Fahrenheit:
-                    return (valueToConvert - 273.15) * (9/5) + 32
-                case .Celsius:
-                    return valueToConvert - 273.15
-                case .Kelvin:
-                    return valueToConvert
-                }
+            switch conversionUnitType {
+            case .Temperature:
+                return convertTemperature(from: valueToConvert)
+            case .Length:
+                return convertLength(from: valueToConvert)
             }
         }else {
             return 0.0
         }
     }
+    
+    func convertTemperature(from valueToConvert : Double) -> Double {
+        switch temperatureUnitToConvertFrom {
+        case .Fahrenheit:
+            switch temperatureUnitToConvertTo {
+            case .Fahrenheit:
+                return valueToConvert
+            case .Celsius:
+                return (valueToConvert - 32) * (5/9)
+            case .Kelvin:
+                return (valueToConvert - 32) * (5/9) + 273.15
+            }
+            
+        case .Celsius:
+            switch temperatureUnitToConvertTo {
+            case .Fahrenheit:
+                return valueToConvert * (9/5) + 32
+            case .Celsius:
+                return valueToConvert
+            case .Kelvin:
+                return valueToConvert + 273.15
+            }
+            
+        case .Kelvin:
+            switch temperatureUnitToConvertTo {
+            case .Fahrenheit:
+                return (valueToConvert - 273.15) * (9/5) + 32
+            case .Celsius:
+                return valueToConvert - 273.15
+            case .Kelvin:
+                return valueToConvert
+            }
+        }
+    }
+    
+    func convertLength(from valueToConvert: Double) -> Double {
+        switch lengthUnitToConvertFrom {
+        case .Meters:
+            switch lengthUnitToConvertTo {
+            case .Meters:
+                return valueToConvert
+            case .Kilometers:
+                return valueToConvert / 1000
+            case .Feet:
+                return valueToConvert * 3.28084
+            case .Miles:
+                return valueToConvert * 0.000621371
+            case .Yards:
+                return valueToConvert * 1.09361
+            }
+        case .Kilometers:
+            switch lengthUnitToConvertTo {
+            case .Meters:
+                return valueToConvert * 1000
+            case .Kilometers:
+                return valueToConvert
+            case .Feet:
+                return valueToConvert * 3280.84
+            case .Miles:
+                return valueToConvert * 0.621371
+            case .Yards:
+                return valueToConvert * 1093.61
+            }
+        case .Feet:
+            switch lengthUnitToConvertTo {
+            case .Meters:
+                return valueToConvert / 3.28084
+            case .Kilometers:
+                return valueToConvert / 3280.84
+            case .Feet:
+                return valueToConvert
+            case .Miles:
+                return valueToConvert * 0.000189394
+            case .Yards:
+                return valueToConvert / 3
+            }
+        case .Yards:
+            switch lengthUnitToConvertTo {
+            case .Meters:
+                return valueToConvert / 1.09361
+            case .Kilometers:
+                return valueToConvert / 1093.61
+            case .Feet:
+                return valueToConvert * 3
+            case .Miles:
+                return valueToConvert * 0.000568182
+            case .Yards:
+                return valueToConvert
+            }
+        case .Miles:
+            switch lengthUnitToConvertTo {
+            case .Meters:
+                return valueToConvert * 1609.34
+            case .Kilometers:
+                return valueToConvert * 1.60934
+            case .Feet:
+                return valueToConvert * 5280
+            case .Miles:
+                return valueToConvert
+            case .Yards:
+                return valueToConvert * 1760
+            }
+        }
+    }
+    
     var body: some View {
         NavigationView {
             Form {
                 Section("Conversion Type") {
                     Picker("Units", selection: $conversionUnitType) {
-                        ForEach(["Temperature", "Length", "Time", "Volume"], id: \.self) {
-                            Text($0)
+                        ForEach(ConversionTypes.allCases, id: \.self) {
+                            Text($0.rawValue)
                         }
                     }
                     .pickerStyle(.navigationLink)
@@ -72,23 +170,44 @@ struct ContentView: View {
                     HStack {
                         VStack{
                             Section("From") {
-                                Picker("Select", selection: $unitToConvertFrom){
-                                    ForEach(TemperatureUnit.allCases, id: \.self) {
-                                        Text($0.rawValue)
+                                switch conversionUnitType {
+                                case .Temperature:
+                                    Picker("Select", selection: $temperatureUnitToConvertFrom){
+                                        ForEach(TemperatureUnit.allCases, id: \.self) {
+                                            Text($0.rawValue)
+                                        }
                                     }
+                                    .pickerStyle(.wheel)
+                                case .Length:
+                                    Picker("Select", selection: $lengthUnitToConvertFrom){
+                                        ForEach(LengthUnit.allCases, id: \.self) {
+                                            Text($0.rawValue)
+                                        }
+                                    }
+                                    .pickerStyle(.wheel)
                                 }
-                                .pickerStyle(.wheel)
+                                
                                 //4454 -- 4455
                             }
                         }
                         VStack{
                             Section("To") {
-                                Picker("Select", selection: $unitToConvertTo){
-                                    ForEach(TemperatureUnit.allCases, id: \.self) {
-                                        Text($0.rawValue)
+                                switch conversionUnitType {
+                                case .Temperature:
+                                    Picker("Select", selection: $temperatureUnitToConvertTo){
+                                        ForEach(TemperatureUnit.allCases, id: \.self) {
+                                            Text($0.rawValue)
+                                        }
                                     }
+                                    .pickerStyle(.wheel)
+                                case .Length:
+                                    Picker("Select", selection: $lengthUnitToConvertTo){
+                                        ForEach(LengthUnit.allCases, id: \.self) {
+                                            Text($0.rawValue)
+                                        }
+                                    }
+                                    .pickerStyle(.wheel)
                                 }
-                                .pickerStyle(.wheel)
                                 //4454 -- 4455
                             }
                         }                }
