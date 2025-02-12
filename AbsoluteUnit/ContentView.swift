@@ -10,6 +10,8 @@ import SwiftUI
 enum ConversionTypes : String, CaseIterable {
     case Temperature = "Temperature"
     case Length = "Length"
+    case Time = "Time"
+    case Volume = "Volume"
 }
 
 enum TemperatureUnit : String, CaseIterable{
@@ -27,6 +29,22 @@ enum LengthUnit : String, CaseIterable {
     case Miles = "Miles"
 }
 
+// TODO: Time conversion: users choose seconds, minutes, hours, or days.
+enum TimeUnit : String, CaseIterable {
+    case Seconds = "Seconds"
+    case Minutes = "Minutes"
+    case Hours = "Hours"
+    case Days = "Days"
+}
+
+// TODO: Volume conversion: users choose milliliters, liters, cups, pints, or gallons.
+enum VolumeUnit : String, CaseIterable {
+    case MilliLiters = "MilliLiters"
+    case Liters = "Liters"
+    case Cups = "Cups"
+    case Pints = "Pints"
+    case Gallons = "Gallons"
+}
 struct ContentView: View {
     @State private var valueToConvert : String = "0.0"
     @State private var conversionUnitType : ConversionTypes = .Temperature
@@ -35,6 +53,10 @@ struct ContentView: View {
     @State private var temperatureUnitToConvertTo = TemperatureUnit.Celsius
     @State private var lengthUnitToConvertFrom = LengthUnit.Meters
     @State private var lengthUnitToConvertTo = LengthUnit.Kilometers
+    @State private var timeUnitToConvertFrom = TimeUnit.Seconds
+    @State private var timeUnitToConvertTo = TimeUnit.Minutes
+    @State private var volumeUnitToConvertFrom = VolumeUnit.MilliLiters
+    @State private var volumeUnitToConvertTo = VolumeUnit.Liters
     
     @FocusState private var isStartingValueFocused: Bool
     
@@ -45,6 +67,10 @@ struct ContentView: View {
                 return convertTemperature(from: valueToConvert)
             case .Length:
                 return convertLength(from: valueToConvert)
+            case .Time:
+                return convertTime(from: valueToConvert)
+            case .Volume:
+                return convertVolume(from: valueToConvert)
             }
         }else {
             return 0.0
@@ -155,6 +181,125 @@ struct ContentView: View {
         }
     }
     
+    func convertTime(from valueToConvert: Double) -> Double {
+        switch timeUnitToConvertFrom {
+        case .Seconds:
+            switch timeUnitToConvertTo {
+            case .Seconds:
+                return valueToConvert
+            case .Minutes:
+                return valueToConvert / 60
+            case .Hours:
+                return valueToConvert / 3600
+            case .Days:
+                return valueToConvert / 86400
+            }
+        case .Minutes:
+            switch timeUnitToConvertTo {
+            case .Seconds:
+                return valueToConvert * 60
+            case .Minutes:
+                return valueToConvert
+            case .Hours:
+                return valueToConvert / 60
+            case .Days:
+                return valueToConvert / 1440
+            }
+        case .Hours:
+            switch timeUnitToConvertTo {
+            case .Seconds:
+                return valueToConvert * 3600
+            case .Minutes:
+                return valueToConvert * 60
+            case .Hours:
+                return valueToConvert
+            case .Days:
+                return valueToConvert / 24
+            }
+        case .Days:
+            switch timeUnitToConvertTo {
+            case .Seconds:
+                return valueToConvert * 86400
+            case .Minutes:
+                return valueToConvert * 1440
+            case .Hours:
+                return valueToConvert * 24
+            case .Days:
+                return valueToConvert
+            }
+        }
+    }
+    
+    func convertVolume(from valueToConvert : Double) -> Double {
+        switch volumeUnitToConvertFrom {
+        case .MilliLiters:
+            switch volumeUnitToConvertTo {
+            case .MilliLiters:
+                return valueToConvert * 1
+            case .Liters:
+                return valueToConvert * 0.001
+            case .Cups:
+                return valueToConvert * 0.00236588
+            case .Pints:
+                return valueToConvert * 0.00473176
+            case .Gallons:
+                return valueToConvert * 0.00133681
+            }
+        case .Liters:
+            switch volumeUnitToConvertTo {
+            case .MilliLiters:
+                return valueToConvert * 1000
+            case .Liters:
+                return valueToConvert * 1
+            case .Cups:
+                return valueToConvert * 23.6588
+            case .Pints:
+                return valueToConvert * 47.3176
+            case .Gallons:
+                return valueToConvert * 13.3681
+            }
+        case .Cups:
+            switch volumeUnitToConvertTo {
+            case .MilliLiters:
+                return valueToConvert * 240
+            case .Liters:
+                return valueToConvert * 0.236588
+            case .Cups:
+                return valueToConvert * 1
+            case .Pints:
+                return valueToConvert * 2
+            case .Gallons:
+                return valueToConvert * 0.125
+            }
+        case .Pints:
+            switch volumeUnitToConvertTo {
+            case .MilliLiters:
+                return valueToConvert * 480
+            case .Liters:
+                return valueToConvert * 0.473176
+            case .Cups:
+                return valueToConvert * 1.5
+            case .Pints:
+                return valueToConvert * 1
+            case .Gallons:
+                return valueToConvert * 0.0625
+            }
+        case .Gallons:
+            switch volumeUnitToConvertTo {
+            case .MilliLiters:
+                return valueToConvert * 3785.41
+            case .Liters:
+                return valueToConvert * 13.3681
+            case .Cups:
+                return valueToConvert * 16
+            case .Pints:
+                return valueToConvert * 8
+            case .Gallons:
+                return valueToConvert * 1
+            }
+        }
+    }
+    
     var body: some View {
         NavigationView {
             Form {
@@ -165,6 +310,9 @@ struct ContentView: View {
                         }
                     }
                     .pickerStyle(.navigationLink)
+                    .onChange(of: conversionUnitType, {
+                        valueToConvert = "0.0"
+                    })
                 }
                 Section("Converion Units Selection"){
                     HStack {
@@ -185,9 +333,22 @@ struct ContentView: View {
                                         }
                                     }
                                     .pickerStyle(.wheel)
+                                    
+                                case .Time:
+                                    Picker("Select", selection: $timeUnitToConvertFrom) {
+                                        ForEach(TimeUnit.allCases, id: \.self) {
+                                            Text($0.rawValue)
+                                        }
+                                    }
+                                    .pickerStyle(.wheel)
+                                case .Volume:
+                                    Picker("Select", selection: $volumeUnitToConvertFrom) {
+                                        ForEach(VolumeUnit.allCases, id: \.self) {
+                                            Text($0.rawValue)
+                                        }
+                                    }
+                                    .pickerStyle(.wheel)
                                 }
-                                
-                                //4454 -- 4455
                             }
                         }
                         VStack{
@@ -203,6 +364,21 @@ struct ContentView: View {
                                 case .Length:
                                     Picker("Select", selection: $lengthUnitToConvertTo){
                                         ForEach(LengthUnit.allCases, id: \.self) {
+                                            Text($0.rawValue)
+                                        }
+                                    }
+                                    .pickerStyle(.wheel)
+                                    
+                                case .Time:
+                                    Picker("Select", selection: $timeUnitToConvertTo){
+                                        ForEach(TimeUnit.allCases, id: \.self) {
+                                            Text($0.rawValue)
+                                        }
+                                    }
+                                    .pickerStyle(.wheel)
+                                case .Volume:
+                                    Picker("Select", selection: $volumeUnitToConvertTo){
+                                        ForEach(VolumeUnit.allCases, id: \.self) {
                                             Text($0.rawValue)
                                         }
                                     }
